@@ -2,12 +2,45 @@ import requests
 import json
 import string
 import getpass
+import pandas
+import decimal
+from cryptography.fernet import Fernet
+
+_GLOBAL__password_key = Fernet.generate_key()
+
+class Authentication:
+
+	def __init__(self):
+
+		self.__username = "";
+		self.__cipheredPassword = "";
+		self.__passwordKey = _GLOBAL__password_key
+		self.__cipher_suite = Fernet(self.__passwordKey)
+
+	def login(self):
+
+		self.__username = input('Username: ')
+
+		self.__cipheredPassword = self.__cipher_suite.encrypt(getpass.getpass("Password: ").encode("utf-8"))
+
+	def getUsername(self):
+
+		return self.__username
+
+	def getPassword(self):
+
+		return self.__cipheredPassword
+
+	# def decodePassword(self):
+
+
+
 
 class SeekAPIInterface:
 
 	
 
-	def __init__(self, username, password):
+	def __init__(self, username = None, password = None):
 
 		self.base_url = 'http://www.fairdomhub.org/'
 		self.headers = {"Content-type": "application/vnd.api+json",
@@ -16,8 +49,7 @@ class SeekAPIInterface:
 
 		self.username = username
 		self.password = password
-		# self.session = requests.Session().headers.update(self.headers)
-		# self.session.auth(self.username, self.password)
+
 		self.session = self.Auth()
 
 	def __str__(self):
@@ -36,7 +68,18 @@ class SeekAPIInterface:
 
 		session = requests.Session()
 		session.headers.update(self.headers)
-		session.auth = (self.username, self.password)
+
+		self.__cipher_suite = Fernet(_GLOBAL__password_key)
+		
+		if self.username == None and self.password == None:
+
+			me = Authentication()
+			me.login()
+
+			self.username = me.getUsername()
+			self.password = me.getPassword()
+
+		session.auth = (self.username, self.__cipher_suite.decrypt(self.password).decode("utf-8"))
 
 		return session
 
@@ -45,7 +88,7 @@ class SeekAPIInterface:
 	
 class ListInterface(SeekAPIInterface):
 
-	def __init__(self, username, password):
+	def __init__(self, username = None, password = None):
 		super().__init__(username, password)
 		self.ID = ''
 		self.Type = ""
@@ -74,7 +117,7 @@ class ListInterface(SeekAPIInterface):
 class ReadInterface(SeekAPIInterface):
 
 
-	def __init__(self, username, password):
+	def __init__(self, username = None, password = None):
 
 		super().__init__(username, password)
 		self.ID = None
@@ -125,11 +168,7 @@ class ReadInterface(SeekAPIInterface):
 	def parseContentBlobs(self):
 
 		for content_blob in self.attributes['content_blobs']:
-			self.content_blobLinks.append(content_blob['link'])
-
-		for content_blob in self.attributes['content_blobs']:
-			self.content_blobFiles.append(content_blob['original_filename'])
-
+			self.content_blobs.append({'link' : content_blob['link'], 'original_filename': content_blob['original_filename'], 'size' : content_blob['size']})
 
 	def parseRelationships(self):
 
@@ -217,7 +256,7 @@ class ReadInterface(SeekAPIInterface):
 
 		self.readRelationships()
 
-		string = "\n\n";
+		string = "";
 		if hasattr(self, 'creator') and self.creators != []:
 			string += 'Creators: '
 			for creator in self.creators:
@@ -339,9 +378,109 @@ class ReadInterface(SeekAPIInterface):
 				self.data_files.append(file)
 
 
+
+
+class DownloadInterface(SeekAPIInterface):
+
+	def __init__(self, username = None, password = None):
+		super().__init__(username, password);
+
+
+
+	def download(self, link, fileName):
+
+		r = self.session.get(link + '/download')
+		r.raise_for_status()
+		open(fileName, 'wb').write(r.content)
+		print("File " + fileName + " has been downloaded")
+
+
+
+
+class Search(ReadInterface):
+
+	def __init__(self, username = None, password = None):
+
+		super().__init__(username, password)
+
+		self.searchChoices =["assays",
+        "content_blobs",
+        "data_files",
+        "documents",
+        "events",
+        "models",
+        "organisms",
+        "people",
+        "presentations",
+        "programmes",
+        "projects",
+        "publications",
+        "sample_types",
+        "sops",
+        "studies",
+        "all"]
+
+		self.results = []
+
+		self.searchType = []
+		self.json = {}
+
+		self.searchTerm = input("Enter your search: \n")
+
+		choice = None
+		while choice not in self.searchChoices:
+		    choice = input("Please enter one of: " + ', '.join(self.searchChoices))
+
+		self.searchType = choice
+
+	# def __str__(self):
+
+	# def __repr__(self):
+
+	def read(self):
+
+		self.readJSON()
+		self.parseJSON()
+
+	def readJSON(self):
+		payload = {'q': self.searchTerm, 'search_type': self.searchType}
+
+		r = requests.get(self.base_url + 'search', headers=self.headers, params=payload)
+
+		r.raise_for_status()
+
+		self.json = r.json()
+
+	def parseJSON(self):
+
+		for item in self.json['data']:
+			self.results.append({'id': item['id'], 'type': item['type'], 'title': item['attributes']['title']})
+
+	def printResults(self):
+
+		string = "\n"
+		for entry in self.results:
+			string += entry['title'] + "\n"
+		print(string)
+
+	def getID(self, title):
+
+		for entry in self.results:
+			if entry['title'] == title:
+				return entry['id']
+
+	def getType(self, title):
+
+		for entry in self.results:
+			if entry['title'] == title:
+				return entry['type']
+
+
+
+
 class Assay(ReadInterface, ListInterface):
 
-	def __init__(self, username, password):
+	def __init__(self, username = None, password = None):
 
 		super().__init__(username, password)
 
@@ -427,18 +566,16 @@ class Assay(ReadInterface, ListInterface):
 			string += self.assayType['label']
 		if self.technology['label'] != None:
 			string += ", " + self.technology['label']
-		string += "\n\n" + self.description
+		if self.description != None:
+			string += "\n\n" + self.description
 		print(string)
-
-
-
 
 
 	
 
 class Person(ReadInterface, ListInterface):
 
-	def __init__(self, username, password):
+	def __init__(self, username = None, password = None):
 		super().__init__(username, password)
 		self.title = None
 
@@ -459,18 +596,23 @@ class Person(ReadInterface, ListInterface):
 		else:
 			self.readJSON(operation, ID)
 			self.parseJSON()
-	
-class File(ReadInterface, ListInterface):
 
-	def __init__(self, username, password):
+
+
+	
+class File(ReadInterface, ListInterface, DownloadInterface):
+
+	def __init__(self, username = None, password = None):
 		super().__init__(username, password)
 		
 		
 		self.description = None
 		self.latest_version = None
 		self.versions = []
-		self.content_blobLinks = []
-		self.content_blobFiles = []
+		# self.size = None
+		# self.content_blobLinks = []
+		# self.content_blobFiles = []
+		self.content_blobs = []
 
 		self.creators = []
 		self.submitter = []
@@ -529,8 +671,21 @@ class File(ReadInterface, ListInterface):
 		if self.description != None:
 			string += "\n\n" + self.description
 		string += "\nContent Blobs:"
-		for link in self.content_blobLinks:
-			string += "\n" + link + " | "
+		for blob in self.content_blobs:
+			string += "\n" + blob['link'] + " - " + self.getSize(blob['size']) + "\n"
 		string = string[:-2]
 
 		print(string)
+
+	def getSize(self, sizeInB):
+
+		if sizeInB >= 1000000000:
+			return (decimal.Decimal(sizeInB) / decimal.Decimal(1000000000)).__str__() + ' GB '
+		elif sizeInB >= 1000000:
+			return (decimal.Decimal(sizeInB) / decimal.Decimal(1000000)).__str__() + ' MB '
+		elif sizeInB >= 1000:
+			return (decimal.Decimal(sizeInB) / decimal.Decimal(1000)).__str__() + ' KB '
+		else :
+			return sizeInB + ' B'
+
+
