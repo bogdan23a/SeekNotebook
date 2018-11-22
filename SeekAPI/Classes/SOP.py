@@ -1,9 +1,11 @@
-from SeekAPI.Interfaces import ReadInterface, ListInterface
+from SeekAPI.Interfaces.ReadInterface import ReadInterface
+from SeekAPI.Interfaces.ListInterface import ListInterface
+from SeekAPI.Interfaces.DownloadInterface import DownloadInterface
 
 class SOP(ReadInterface, ListInterface, DownloadInterface):
 
-	def __init__(self, username = None, password = None):
-		super().__init__(username, password)
+	def __init__(self, auth):
+		super().__init__(auth)
 		
 		
 		self.description = None
@@ -24,7 +26,7 @@ class SOP(ReadInterface, ListInterface, DownloadInterface):
 
 		self.fileTypes = []
 
-	def read(self, ID = "None", operation = "data_files"):
+	def read(self, ID = "None", operation = "sops"):
 
 		# Check if the request made is actually a list request
 		if(ID == "None"):
@@ -37,16 +39,16 @@ class SOP(ReadInterface, ListInterface, DownloadInterface):
 	def parseJSON(self):
 
 		super().parseJSON()
-		self.parseDataFileAttributes()
-		self.parseDataFileRelationships()
+		self.parseSOPAttributes()
+		self.parseSOPRelationships()
 
-	def parseDataFileAttributes(self):
+	def parseSOPAttributes(self):
 
 		self.parseDescription()
 		self.parseVersion()
 		self.parseContentBlobs()
 
-	def parseDataFileRelationships(self):
+	def parseSOPRelationships(self):
 
 		self.parseCreators()
 		self.parseSubmitters()
@@ -56,12 +58,12 @@ class SOP(ReadInterface, ListInterface, DownloadInterface):
 		self.parseStudies()
 		self.parseAssays()
 		self.parsePublications()
-		self.parseEvents()
 
 		self.getFileTypes()
 
 	def printAttributes(self):
 
+		
 		string = self.title + " (current version: " + self.latest_version.__str__() + ")" 
 		if self.description != None:
 			string += "\n\n" + self.description
