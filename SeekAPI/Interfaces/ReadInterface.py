@@ -15,6 +15,7 @@ class ReadInterface(SeekAPIInterface):
 		self.Type = None
 		self.title = None
 		self.attributes = {}
+
 		self.relationships = {}
 
 		self.links = {}
@@ -55,7 +56,32 @@ class ReadInterface(SeekAPIInterface):
 		
 		self.attributes = self.json['data']['attributes']
 		self.title = self.attributes['title']
+
+		if hasattr(self, 'description'):
+			self.parseDescription()
 		
+		if hasattr(self, 'version'):
+			self.parseVersion()
+
+		if hasattr(self, 'concept_uri'):
+			self.parseConceptUri()
+
+		if hasattr(self, 'content_blobs'):
+			self.parseContentBlobs()
+		
+		if hasattr(self, 'avatar'): # TODO 
+			pass
+
+		if hasattr(self, 'web_page'): # TODO
+			pass
+
+		if hasattr(self, 'wiki_page'): # TODO
+			pass
+			
+		if hasattr(self, 'policy'): # TODO
+			pass
+		
+
 	def parseDescription(self):
 		
 		self.description = self.attributes['description']
@@ -63,6 +89,10 @@ class ReadInterface(SeekAPIInterface):
 	def parseVersion(self):
 
 		self.latest_version = self.attributes['latest_version']
+
+	def parseConceptUri(self):
+
+		self.concept_uri = self.attributes['concept_uri']
 
 	def parseContentBlobs(self):
 
@@ -72,6 +102,55 @@ class ReadInterface(SeekAPIInterface):
 	def parseRelationships(self):
 
 		self.relationships = self.json['data']['relationships']
+
+		if hasattr(self, 'creators'):
+			self.parseCreators()
+
+		if hasattr(self, 'submitters'):
+			self.parseSubmitters()
+
+		if hasattr(self, 'organisms'):
+			self.parseOrganisms()
+
+		if hasattr(self, 'people'):
+			self.parsePeople()
+		
+		if hasattr(self, 'projects'):
+			self.parseProjects()
+
+		if hasattr(self, 'investigations'):
+			self.parseInvestigations()
+
+		if hasattr(self, 'investigation'):
+			self.parseInvestigation()
+		
+		if hasattr(self, 'study'):
+			self.parseStudy()
+
+		if hasattr(self, 'studies'):
+			self.parseStudies()
+
+		if hasattr(self, 'data_files'):
+			self.parseDataFiles()
+
+		if hasattr(self, 'models'):
+			self.parseModels()
+		
+		if hasattr(self, 'sops'):
+			self.parseSOPs()
+
+		if hasattr(self, 'assays'):
+			self.parseAssays()
+
+		if hasattr(self, 'publications'):
+			self.parsePublications()
+
+		if hasattr(self, 'documents'):
+			self.parseDocuments()
+
+		if hasattr(self, 'events'):
+			self.parseEvents()
+
 
 	def parseCreators(self):
 
@@ -161,10 +240,18 @@ class ReadInterface(SeekAPIInterface):
 
 		from ..Classes.Assay import Assay
 		from ..Classes.Person import Person
+		from ..Classes.File import File
+		from ..Classes.Organism import Organism
+		from ..Classes.Project import Project
+		from ..Classes.Model import Model
+		from ..Classes.SOP import SOP
+		from ..Classes.Investigation import Investigation
+		from ..Classes.Study import Study
+		from ..Classes.Publication import Publication
 
-		
-		if isinstance(self.creators[0], Person) == False:
-			self.readRelationships()
+		# if (hasattr(self,'creators') and isinstance(self.creators[0], Person) == False) or (hasattr(self, 'projects') and isinstance(self.projects[0], Project) == False):
+		# if self.relationships == {}:
+		self.readRelationships() # TODO - verification
 
 		string = ""
 
@@ -176,19 +263,19 @@ class ReadInterface(SeekAPIInterface):
 			string = string[:-2]
 
 		if hasattr(self, 'submitter') and self.submitter != []:
-			string += '\nSubmitter: '
+			string += '\n\n\nSubmitter: '
 			for submitter in self.submitter:
 				string += submitter.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'organisms') and self.organisms != []:
-			string += '\nOrganisms: '
+			string += '\n\n\nOrganisms: '
 			for organism in self.organisms:
-				string += organism + ' | '
+				string += organism.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'people') and self.people != []:
-			string += '\nPeople: '
+			string += '\n\n\nPeople: '
 			for person in self.people:
 				string += person.title + ' | '
 			string = string[:-2]
@@ -196,47 +283,47 @@ class ReadInterface(SeekAPIInterface):
 		if hasattr(self, 'projects') and self.projects != []:
 			string += '\nProjects: '
 			for project in self.projects:
-				string += project + ' | '
+				string += project.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'investigation') and self.investigation != None:
-			string += '\nInvestigation: ' + self.investigation
+			string += '\n\n\nInvestigation: ' + self.investigation.title
 
 		if hasattr(self, 'investigations') and self.investigations != None:
-			string += '\nInvestigations: '
+			string += '\n\n\nInvestigations: '
 			for investigation in self.investigations:
-				string += investigation + ' | '
+				string += investigation.title + ' | '
 			string = string[:-2]
 	
 		if hasattr(self, 'study') and self.study != None:
-			string += '\nStudy: ' + self.study
+			string += '\n\n\nStudy: ' + self.study.title
 
 		if hasattr(self, 'studies') and self.studies != None:
-			string += '\nStudies: '
+			string += '\n\n\nStudies: '
 			for study in self.studies:
-				string += study + ' | '
+				string += study.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'data_files') and self.data_files != []:
-			string += '\nData Files: '
-			for file in self.data_files:
-				string += file.title + ' | '
+			string += '\n\n\nData Files: '
+			for fil in self.data_files:
+				string += fil.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'models') and self.models != []:
-			string += '\nModels: '
+			string += '\n\n\nModels: '
 			for model in self.models:
-				string += model + ' | '
+				string += model.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'sops') and self.sops != []:
-			string += '\nSOPs: '
+			string += '\n\n\nSOPs: '
 			for sop in self.sops:
-				string += organism + ' | '
+				string += sop.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'assays') and self.assays != []:
-			string += '\nAssays: '
+			string += '\n\n\nAssays: '
 			for assay in self.assays:
 				string += assay.title + ' | '
 			string = string[:-2]
@@ -244,21 +331,22 @@ class ReadInterface(SeekAPIInterface):
 		if hasattr(self, 'publications') and self.publications != []:
 			string += '\nPublications: '
 			for publication in self.publications:
-				string += publication + ' | '
+				string += publication.title + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'documents') and self.documents != []:
-			string += '\nDocuments: '
+			string += '\n\n\nDocuments: '
 			for document in self.documents:
 				string += document + ' | '
 			string = string[:-2]
 
 		if hasattr(self, 'events') and self.events != []:
-			string += '\nEvents: '
+			string += '\n\n\nEvents: '
 			for event in self.events:
 				string += event + ' | '
 			string = string[:-2]
-
+		
+		
 		print(string)
 	
 	#TODO - Merge readObjects from Search with this
@@ -267,6 +355,13 @@ class ReadInterface(SeekAPIInterface):
 		from ..Classes.Assay import Assay
 		from ..Classes.Person import Person
 		from ..Classes.File import File
+		from ..Classes.Organism import Organism
+		from ..Classes.Project import Project
+		from ..Classes.Model import Model
+		from ..Classes.SOP import SOP
+		from ..Classes.Investigation import Investigation
+		from ..Classes.Study import Study
+		from ..Classes.Publication import Publication
 
 		print('\nLoading relationships! Please wait...\n')
 
@@ -316,8 +411,97 @@ class ReadInterface(SeekAPIInterface):
 			print("data_files", end="")
 			for fileName in data_files:
 				print(".", end="")
-				file = File(self.auth)
-				file.read(fileName)
-				self.data_files.append(file)
+				fil = File(self.auth)
+				fil.read(fileName)
+				self.data_files.append(fil)
 
+		if hasattr(self, 'organisms'):
+			organisms = self.organisms
+			self.organisms = []
+			print("organisms", end="")
+			for organismName in organisms:
+				print(".", end="")
+				organism = Organism(self.auth)
+				organism.read(organismName)
+				self.organisms.append(organism)
+		
+		if hasattr(self, 'projects'):
+			projects = self.projects
+			self.projects = []
+			print("projects", end="")
+			for projectName in projects:
+				print(".", end="")
+				project = Project(self.auth)
+				project.read(projectName)
+				self.projects.append(project)
+
+		if hasattr(self, 'models'):
+			models = self.models
+			self.models = []
+			print("models", end="")
+			for modelName in models:
+				print(".", end="")
+				model = Model(self.auth)
+				model.read(modelName)
+				self.models.append(model)
+		
+		if hasattr(self, 'sops'):
+			sops = self.sops
+			self.sops = []
+			print("sops", end="")
+			for sopName in sops:
+				print(".", end="")
+				sop = SOP(self.auth)
+				sop.read(sopName)
+				self.sops.append(sop)
+
+		if hasattr(self, 'investigations'):
+			investigations = self.investigations
+			self.investigations = []
+			print("investigatons", end="")
+			for investigationName in investigations:
+				print(".", end="")
+				investigation = Investigation(self.auth)
+				investigation.read(investigationName)
+				self.investigations.append(investigation)
+
+		if hasattr(self, 'investigation'):
+			investigation = self.investigation
+			self.investigation = None
+			print("investigaton", end="")
+			print(".", end="")
+			inv = Investigation(self.auth)
+			inv.read(investigation)
+			self.investigation = inv
+
+		if hasattr(self, 'studies'):
+			studies = self.studies
+			self.studies = []
+			print("studies", end="")
+			for studyName in studies:
+				print(".", end="")
+				study = Study(self.auth)
+				study.read(studyName)
+				self.studies.append(study)
+
+		if hasattr(self, "study"):
+			study = self.study
+			self.study = None
+			print("study", end="")
+			# for investigationName in investigations:
+			print(".", end="")
+			s = Study(self.auth)
+			s.read(investigation)
+			self.study = s
+			
+		if hasattr(self, 'publications'):
+			publications = self.publications
+			self.publications = []
+			print("publications", end="")
+			for publicationName in publications:
+				print(".", end="")
+				publication = Publication(self.auth)
+				publication.read(publicationName)
+				self.publications.append(study)
+		
 		print('Relationships loaded.\n')

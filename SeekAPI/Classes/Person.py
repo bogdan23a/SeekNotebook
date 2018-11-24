@@ -1,6 +1,7 @@
 from ..Interfaces.ReadInterface import ReadInterface
+from ..Interfaces.ListInterface import ListInterface
 
-class Person(ReadInterface):
+class Person(ReadInterface, ListInterface):
 
 	def __init__(self, auth):
 

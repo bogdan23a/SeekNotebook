@@ -6,10 +6,10 @@ class ListInterface(SeekAPIInterface):
 	def __init__(self, auth):
 		super().__init__(auth)
 		self.ID = ''
-		self.Type = ""
-		self.attributes = {}
+		self.Type = ""		
 		self.title = ""
-		self.description = ""
+		self.attributes = {}
+
 
 		self.relationships = {}
 
@@ -20,7 +20,7 @@ class ListInterface(SeekAPIInterface):
 		r = self.session.get(self.base_url + operation)
 		r.raise_for_status()
 
-		self.json = r.json();
+		self.json = r.json()
 
 	def parseListJSON(self):
 

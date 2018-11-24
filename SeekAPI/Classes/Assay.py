@@ -49,38 +49,15 @@ class Assay(ReadInterface, ListInterface):
 
 		super().parseJSON()
 		self.parseAssayAttributes()
-		self.parseAssayRelationships()
 
 		
 	def parseAssayAttributes(self):
 
-		self.parseDescription()
-
 		self.assayClass['title'] = self.attributes['assay_class']['title']
-		self.assayClass['description'] = self.attributes['assay_class']['description']
 		self.assayType['label'] = self.attributes['assay_type']['label']
 		self.assayType['uri'] = self.attributes['assay_type']['uri']
-		
-
 		self.technology['label'] = self.attributes['technology_type']['label']
 		self.technology['uri'] = self.attributes['technology_type']['uri']
-
-
-	def parseAssayRelationships(self):
-
-		self.parseCreators()
-		self.parseSubmitters()
-		self.parseOrganisms()
-		self.parsePeople()
-		self.parseProjects()
-		self.parseInvestigation()
-		self.parseStudy()
-		self.parseDataFiles()
-		self.parseModels()
-		self.parseSOPs()
-		self.parsePublications()
-		self.parseDocuments()
-
 
 	def printAttributes(self):
 

@@ -68,33 +68,6 @@ class File(ReadInterface, ListInterface, DownloadInterface):
 			self.parseJSON()
 
 	
-
-	def parseJSON(self):
-
-		super().parseJSON()
-		self.parseDataFileAttributes()
-		self.parseDataFileRelationships()
-
-	def parseDataFileAttributes(self):
-
-		self.parseDescription()
-		self.parseVersion()
-		self.parseContentBlobs()
-
-	def parseDataFileRelationships(self):
-
-		self.parseCreators()
-		self.parseSubmitters()
-		self.parsePeople()
-		self.parseProjects()
-		self.parseInvestigations()
-		self.parseStudies()
-		self.parseAssays()
-		self.parsePublications()
-		self.parseEvents()
-
-		self.getFileTypes()
-
 	def printAttributes(self):
 
 		string = self.title + " (version: " + self.latest_version.__str__() + ")" 

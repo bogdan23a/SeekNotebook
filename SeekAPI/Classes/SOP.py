@@ -36,31 +36,6 @@ class SOP(ReadInterface, ListInterface, DownloadInterface):
 			self.readJSON(operation, ID)
 			self.parseJSON()
 
-	def parseJSON(self):
-
-		super().parseJSON()
-		self.parseSOPAttributes()
-		self.parseSOPRelationships()
-
-	def parseSOPAttributes(self):
-
-		self.parseDescription()
-		self.parseVersion()
-		self.parseContentBlobs()
-
-	def parseSOPRelationships(self):
-
-		self.parseCreators()
-		self.parseSubmitters()
-		self.parsePeople()
-		self.parseProjects()
-		self.parseInvestigations()
-		self.parseStudies()
-		self.parseAssays()
-		self.parsePublications()
-
-		self.getFileTypes()
-
 	def printAttributes(self):
 
 		
